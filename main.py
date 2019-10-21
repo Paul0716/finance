@@ -1,57 +1,90 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import pickle
+import os.path
 from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+TARGET_FOLDER = 'Stock Report'
+
+def authorization(scope, path='./client_secret.json'):
+    creds = None
+    # The file token.pickle stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                path, scope)
+            creds = flow.run_local_server(port=0)
+            print(creds)
+        # Save the credentials for the next run
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+    return creds
+
+def find_target_folder(items):
+    def is_target_folder_exists(item):
+        return item['mimeType'] == 'application/vnd.google-apps.folder' and item['name'] == TARGET_FOLDER
+    files = list(filter(is_target_folder_exists, items))
+    return files[0] if len(files) > 0 else None
+
 
 def main():
-    print('main function')
-
-    scope = [
-        'https://spreadsheets.google.com/feeds',
+    credentials = authorization(scope=[
+        'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
-    ]
+    ])
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('./service.json', scope)
     # gspread client
-    # gc = gspread.authorize(credentials)
+    gc = build('sheets', 'v4', credentials=credentials)
     # google drive client
     gd = build('drive', 'v3', credentials=credentials)
 
-
-
-    '''
-    google drive
-    '''
-    # print(gd)
-    # body = {
-    #     'name': 'test-folder',
-    #     'mimeType': "application/vnd.google-apps.folder"
-    # }
-    # folder = gd.files().create(body=body).execute()
-    results = gd.files().list(pageSize=20, fields="nextPageToken, files(id, name, mimeType)").execute()
+    # drive list files
+    results = gd.files().list(fields="nextPageToken, files(id, name, mimeType)").execute()
     items = results.get('files', [])
+    # check target folder
+    folder = find_target_folder(items)
 
-    if not items:
-        print('No files found.')
-    else:
-        print('Files:')
-        for item in items:
-            print(u'{0} ({1}) mimeType:{2}'.format(item['name'], item['id'], item['mimeType']))
-            if not item['mimeType'] is 'application/vnd.google-apps.folder':
-                file = gd.files().update(fileId=item['id'], addParents='1yxXav3_OeHickPbgNgfRiv01gdZGgNRZ', fields='id').execute()
-
-
+    if not folder:
+        folder = gd.files().create(body={
+            'name': TARGET_FOLDER,
+            'mimeType': "application/vnd.google-apps.folder"
+        }).execute()
 
     # Create new WorkSheet
-    # sh = gc.create('A new spreadsheet')
-    # sh.share('justlove0714@gmail.com', perm_type='user', role='writer')
-    # worksheet = sh.add_worksheet(title="A worksheet", rows="100", cols="20")
-    # cell_list = worksheet.range('A1:C7')
-    #
-    # for cell in cell_list:
-    #     cell.value = 'O_o'
+    sheet = gd.files().create(body={
+        'name': 'a new spreadsheet',
+        'parents': [folder['id']],
+        'description': 'a example worksheet',
+        'mimeType': "application/vnd.google-apps.spreadsheet"
+    }).execute()
+    print(sheet)
 
-    # Update in batch
-    # worksheet.update_cells(cell_list)
+    body = {
+        'range': 'A1:D2',
+        'majorDimension': 'ROWS',
+        'values': [
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+        ]
+    }
+    # Update WorkSheet Data
+    result = gc.spreadsheets().values().update(
+        spreadsheetId=sheet['id'],
+        valueInputOption='RAW',
+        range='A1:D2',
+        body=body
+    ).execute()
+    print(result)
+
+    # Read Content of existing WorkSheet
 
 if __name__ == '__main__':
     main()
