@@ -59,14 +59,87 @@ def main():
         }).execute()
 
     # Create new WorkSheet
-    sheet = gd.files().create(body={
-        'name': 'a new spreadsheet',
-        'parents': [folder['id']],
-        'description': 'a example worksheet',
-        'mimeType': "application/vnd.google-apps.spreadsheet"
+    '''
+    create by google drive
+    '''
+    # sheet = gd.files().create(body={
+    #     'name': 'a new spreadsheet',
+    #     'parents': [folder['id']],
+    #     'description': 'a example worksheet',
+    #     'mimeType': "application/vnd.google-apps.spreadsheet"
+    # }).execute()
+    # print(sheet)
+    '''
+    Or create by google sheet 
+    '''
+    sheet = gc.spreadsheets().create(body={
+        'properties': {
+            'title': 'a new spreadsheet',
+        },
+        'sheets':[
+            {
+                'properties': {
+                    'title': '',
+                    'index': 0,
+                    'gridProperties': {
+                        'rowCount': 4,
+                        'columnCount': 4
+                    }
+                },
+                "data": [
+                    {
+                        'startRow': 0,
+                        'startColumn': 0,
+                        'rowData': [
+                            {
+                                'values': [
+                                    {
+                                        'userEnteredValue': {
+                                            'numberValue': 0
+                                        }
+                                    },
+                                    {
+                                        'userEnteredValue': {
+                                            'numberValue': 1
+                                        }
+                                    },
+                                    {
+                                        'userEnteredValue': {
+                                            'numberValue': 2
+                                        }
+                                    },
+                                    {
+                                        'userEnteredValue': {
+                                            'numberValue': 3
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+            }
+        ]
     }).execute()
     print(sheet)
+    '''
+    then move to parenet folder
+    '''
+    sh = gd.files().get(
+        fileId=sheet['spreadsheetId']
+    ).execute()
+    sh['addParents'] = [folder['id']]
+    print(sh,)
+    request = gd.files().update(
+        fileId=sheet['spreadsheetId'],
+        body=sh
+    )
+    print(request)
+    response = request.execute()
+    print(response)
 
+
+    # Update WorkSheet Data
     body = {
         'range': 'A1:D2',
         'majorDimension': 'ROWS',
@@ -75,16 +148,23 @@ def main():
             [5, 6, 7, 8],
         ]
     }
-    # Update WorkSheet Data
-    result = gc.spreadsheets().values().update(
-        spreadsheetId=sheet['id'],
+    response = gc.spreadsheets().values().update(
+        spreadsheetId=sheet['spreadsheetId'],
         valueInputOption='RAW',
         range='A1:D2',
         body=body
     ).execute()
-    print(result)
+    print(response)
+
 
     # Read Content of existing WorkSheet
+    request = gc.spreadsheets().values().batchGet(
+        spreadsheetId=response['spreadsheetId'],
+        ranges='A1:D2',
+        valueRenderOption='UNFORMATTED_VALUE',
+        dateTimeRenderOption='FORMATTED_STRING')
+    response = request.execute()
+    print(response)
 
 if __name__ == '__main__':
     main()
