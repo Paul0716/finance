@@ -69,7 +69,7 @@ def main():
         'description': 'a example worksheet',
         'mimeType': "application/vnd.google-apps.spreadsheet"
     }).execute()
-    pprint(sheet)
+    # pprint(sheet)
 
     # add a target worksheet
     ws = gc.spreadsheets().batchUpdate(
@@ -92,15 +92,47 @@ def main():
                             }
                         },
                     },
-                    'appendCells': {
-                        'sheetId': 0,
-                        'rows': {
+                }
+            ]
+        });
+    response = ws.execute()
+    # pprint(response)
+    target = gc.spreadsheets().get(spreadsheetId=sheet['id']).execute()
+
+    def is_sheet_name(sheet):
+        return sheet['properties']['title'] == 'Deposits'
+
+    sh = list(filter(is_sheet_name, target['sheets']))[0]
+
+
+    pprint(sh)
+
+    # Update WorkSheet Data
+    body = {
+        'range': 'A1:D2',
+        'majorDimension': 'ROWS',
+        'values': [
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+        ]
+    }
+    response = gc.spreadsheets().values().update(
+        spreadsheetId=sheet['id'],
+        valueInputOption='RAW',
+        range='A1:D2',
+        body=body
+    ).execute()
+    pprint(response)
+
+    # Apeend WorkSheetData
+    body = {
+        'requests': [
+            {
+                'appendCells': {
+                    'sheetId': sh['properties']['sheetId'],
+                    'rows': [
+                        {
                             'values': [
-                                {
-                                    'userEnteredValue': {
-                                        'numberValue': 0
-                                    }
-                                },
                                 {
                                     'userEnteredValue': {
                                         'numberValue': 1
@@ -115,43 +147,27 @@ def main():
                                     'userEnteredValue': {
                                         'numberValue': 3
                                     }
-                                },
+                                }
                             ]
-                        },
-                        'fields': '*'
-                    }
+                        }
+                    ],
+                    'fields': '*'
                 }
-            ]
-        });
-    response = ws.execute()
+            }
+        ]
+    }
+    response = gc.spreadsheets().batchUpdate(spreadsheetId=sheet['id'], body=body).execute()
     pprint(response)
-
-    # Update WorkSheet Data
-    # body = {
-    #     'range': 'A1:D2',
-    #     'majorDimension': 'ROWS',
-    #     'values': [
-    #         [1, 2, 3, 4],
-    #         [5, 6, 7, 8],
-    #     ]
-    # }
-    # response = gc.spreadsheets().values().update(
-    #     spreadsheetId=sheet['id'],
-    #     valueInputOption='RAW',
-    #     range='A1:D2',
-    #     body=body
-    # ).execute()
-    # pprint(response)
 
 
     # Read Content of existing WorkSheet
-    request = gc.spreadsheets().values().batchGet(
-        spreadsheetId=response['spreadsheetId'],
-        ranges='A1:D2',
-        valueRenderOption='UNFORMATTED_VALUE',
-        dateTimeRenderOption='FORMATTED_STRING')
-    response = request.execute()
-    pprint(response)
+    # request = gc.spreadsheets().values().batchGet(
+    #     spreadsheetId=response['spreadsheetId'],
+    #     ranges='A1:D2',
+    #     valueRenderOption='UNFORMATTED_VALUE',
+    #     dateTimeRenderOption='FORMATTED_STRING')
+    # response = request.execute()
+    # pprint(response)
 
 if __name__ == '__main__':
     main()
