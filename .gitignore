@@ -2,3 +2,4 @@ service.json
 client_secret.json
 token.pickle
 data/*.csv
+*.log

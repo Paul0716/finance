@@ -25,7 +25,7 @@ def main():
         'name': 'a new spreadsheet',
         'parents': [folder['id']],
         'description': 'a example worksheet',
-        'mimeType': "application/vnd.google-apps.spreadsheet"
+        'mimeType': 'application/vnd.google-apps.spreadsheet'
     })
 
     # add a target worksheet
@@ -62,7 +62,7 @@ def main():
     });
     pprint(response)
 
-    # Apeend WorkSheetData
+    # Append WorkSheetData
     sheets_client.appendCells(spreadsheetId=sheet['id'], body={
         'sheetId': sheet_prop['properties']['sheetId'],
         'rows': [

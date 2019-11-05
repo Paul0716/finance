@@ -2,6 +2,7 @@ import pickle
 import os.path
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from pprint import pprint
 
 
 def authorization(scope, path):
@@ -29,5 +30,4 @@ def authorization(scope, path):
 def find_sheet_by_name(spreadsheet_properties, sheet_name):
     def is_sheet_name(sheet):
         return sheet['properties']['title'] == sheet_name
-
-    return list(filter(is_sheet_name, spreadsheet_properties['sheets']))[0]
+    return list(filter(is_sheet_name, spreadsheet_properties['sheets']))

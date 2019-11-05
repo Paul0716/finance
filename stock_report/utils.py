@@ -2,34 +2,58 @@
 # -*- coding: utf-8 -*-
 
 import csv
-import requests
+import datetime
 import os
-from pyquery import PyQuery as pq
+import requests
+from pprint import pprint
 
-def get_single_page(stock_id, year, month):
-    path = 'data/%s.csv' % stock_id
+def get_single_page(*args, **kwargs):
+    stock_number = kwargs['stock_number']
+    start = kwargs['start']
+    end = kwargs['end']
+    walker = kwargs['walker'] if 'walker' in kwargs.keys() else None
+    adapter = kwargs['adapter'] if 'adapter' in kwargs.keys() else None
+    complete = kwargs['complete'] if 'complete' in kwargs.keys() else None
 
-    check_if_file_exists(path)
+    result = []
+    twse_date_list = []
 
-    csv_data = read_single_file(path)
+    tmp_date = start
+    while tmp_date <= end:
+        date_param = tmp_date.strftime('%Y%m01')
+        if date_param not in twse_date_list:
+            twse_date_list.append(date_param)
+        # add a day to tmp_date
+        tmp_date = tmp_date + datetime.timedelta(days=1)
 
-    with open(path, 'ab') as f:
-        cw = csv.writer(f)
-        page = requests.get(
-            'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/genpage/Report' + year + month + '/' + year + month + '_F3_1_8_' + stock_id + '.php?STK_NO=' + stock_id + '&myear=' + year + '&mmon=' + month)
-        if page.status_code is 200:
-            d = pq(page.text)
-            row = d('tr.basic2')
-            for key, value in enumerate(row):
-                if key is not 0:
-                    data = d(value).text().strip('"').split(' ')
 
-                    if data not in csv_data:
-                        cw.writerow(data)
-            f.close();
+    # loop for every date string
+    for date_str in twse_date_list:
+        url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=csv&date=%(date)s&stockNo=%(stock_number)s" % {
+            "stock_number": stock_number,
+            "date": date_str
+        }
+        response = requests.get(url, allow_redirects=True)
+
+        if response.status_code is 200:
+            content = response.content.decode('cp1252')
+            for row in content.split('\r\n')[2:22]:
+                dict = adapter(row=row, stock_number=stock_number)
+
+                if walker is not None:
+                    walker(dict)
+
+                result.append(dict)
+
+            # complete
+            if complete is not None:
+                complete(data=result, stock_number=stock_number)
+
+
         else:
-            record_error_log("發生錯誤: status_code: %(code)s, year: %(year)s, month: %(month)s, url: %(url)s " % {
-                'code': page.status_code, 'year': year, 'month': month, 'url': page.url.encode('utf-8')})
+            record_error_log("發生錯誤: status_code: %(code)s, date_param: %(date)s url: %(url)s " % {
+                'code': response.status_code, 'date': date_param, 'url': response.url.encode('utf-8')})
+
 
 
 def get_stock_list(filename):
@@ -43,12 +67,12 @@ def get_stock_list(filename):
 
 # 錯誤輸出檔案
 def record_error_log(msg):
+    line = msg + '\n'
     error_log = open('error.log', 'ab')
-    error_log.write(msg + '/r/n')
+    error_log.write(line.encode())
     error_log.close()
-    return msg
 
-
+# 讀取檔案
 def read_single_file(csvfile):
     data_list = []
     with open(csvfile, 'r') as f:
