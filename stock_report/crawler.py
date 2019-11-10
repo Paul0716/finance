@@ -3,6 +3,7 @@
 
 from .utils import *
 from pprint import pprint
+import re
 from google_client.sheets import google_sheets
 from google_client.drive import google_drive
 
@@ -20,6 +21,22 @@ class crawler:
         # google drive client
         self.drive_client = google_drive(scope, path='./client_secret.json')
 
+    def get_grids_rangs(self, *args, **kwargs):
+        alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        columnCount = kwargs['columnCount']
+        rowCount = kwargs['rowCount']
+        return 'A1:%(letter)s%(count)i' % {
+            'letter': alphabet[columnCount - 1],
+            'count': rowCount
+        }
+
+    def get_daily_data(self, *args, **kwargs):
+        def is_daily_tab(item):
+            return True if re.search(r'^Daily!(.+)$',item['range']).group(0) else False
+        tab_data = list(filter(is_daily_tab, kwargs['data']['valueRanges']))[0]
+        return tab_data['values'] if 'values' in tab_data else None
+
+
 
     def twse_daily_transaction_adapter(self, row):
         '''
@@ -35,6 +52,7 @@ class crawler:
         list = row.split('","')
         for (index, value) in enumerate(list):
             list[index] = remove_comma(remove_doulbe_quote(value))
+
 
         return {
             'date': remove_doulbe_quote(list[0]),  # 日期
@@ -110,7 +128,7 @@ class crawler:
         # get target via google sheet API
         target = self.sheet_client.get(spreadsheetId=sheet['id'])
         sheet_prop = self.sheet_client.find_sheet_by_name(spreadsheet_properties=target, sheet_name=tab_title)
-        pprint(target)
+
         if len(sheet_prop) == 0:
             sheet_prop = self.sheet_client.addSheet(spreadsheetId=sheet['id'], body={
                 'properties': {
@@ -123,12 +141,27 @@ class crawler:
                 },
             })
         pprint(sheet_prop)
-        append_data = map(self._daily_twse_mapper, kwargs['data'])
-        self.sheet_client.appendCells(spreadsheetId=sheet['id'], body={
-            'sheetId': sheet_prop[0]['properties']['sheetId'],
-            'fields': '*',
-            'rows': list(append_data)
-        })
+        sheet_data = self.sheet_client.read(
+            spreadsheetId=sheet['id'],
+            ranges=self.get_grids_rangs(
+                columnCount=sheet_prop[0]['properties']['gridProperties']['columnCount'],
+                rowCount=sheet_prop[0]['properties']['gridProperties']['rowCount']
+            ),
+            valueRenderOption='UNFORMATTED_VALUE',
+            dateTimeRenderOption='FORMATTED_STRING'
+        )
+        existing_data = self.get_daily_data(data=sheet_data)
+        existing_date_list = list(map(lambda row: row[0], existing_data)) if existing_data is not None else []
+
+        append_data = list(filter(lambda row: row['date'] not in existing_date_list, kwargs['data']))
+        append_data = list(map(self._daily_twse_mapper, append_data))
+
+        if len(append_data) > 0:
+            self.sheet_client.appendCells(spreadsheetId=sheet['id'], body={
+                'sheetId': sheet_prop[0]['properties']['sheetId'],
+                'fields': '*',
+                'rows': append_data
+            })
 
 
     def execute(self, *args, **kwargs):

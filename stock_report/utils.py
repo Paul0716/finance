@@ -38,6 +38,10 @@ def get_single_page(*args, **kwargs):
         if response.status_code is 200:
             content = response.content.decode('cp1252')
             for row in content.split('\r\n')[2:22]:
+
+                if len(row.split('","')) < 9:
+                    continue
+
                 dict = adapter(row=row, stock_number=stock_number)
 
                 if walker is not None:
