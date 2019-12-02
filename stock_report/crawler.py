@@ -10,16 +10,16 @@ from google_client.drive import google_drive
 class crawler:
     def __init__(self, stock_number):
         self.stock_number = '0050'
-        self.target_folder = 'Taiwan Index Stock'
+        # self.target_folder = 'Taiwan Index Stock'
 
-        scope = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        # google sheet client
-        self.sheet_client = google_sheets(scope, path='./client_secret.json')
-        # google drive client
-        self.drive_client = google_drive(scope, path='./client_secret.json')
+        # scope = [
+        #     'https://www.googleapis.com/auth/spreadsheets',
+        #     'https://www.googleapis.com/auth/drive'
+        # ]
+        # # google sheet client
+        # self.sheet_client = google_sheets(scope, path='./client_secret.json')
+        # # google drive client
+        # self.drive_client = google_drive(scope, path='./client_secret.json')
 
     def get_grids_rangs(self, *args, **kwargs):
         alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -66,11 +66,11 @@ class crawler:
             'number_of_transactions': remove_comma(list[8])  # 成交筆數
         }
 
-    def _get_target_sheet(self):
-        return self.drive_client.find_target_sheet(self.stock_number)
-
-    def _get_target_folder(self):
-        return self.drive_client.get_root_folder(self.target_folder)
+    # def _get_target_sheet(self):
+    #     return self.drive_client.find_target_sheet(self.stock_number)
+    #
+    # def _get_target_folder(self):
+    #     return self.drive_client.get_root_folder(self.target_folder)
 
     def _daily_twse_mapper(self, row):
         return {

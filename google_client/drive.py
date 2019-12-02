@@ -40,6 +40,7 @@ class google_drive:
         results = self.client.files().list(fields="nextPageToken, files(id, name, mimeType)").execute()
         items = results.get('files', [])
         self._root_files = items
+
         # check target folder
         folder = self.find_target_folder(folder_name)
         if not folder:
