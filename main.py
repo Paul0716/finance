@@ -2,6 +2,8 @@ from argparse import ArgumentParser
 from datetime import datetime
 from stock_report.crawler import crawler
 from stock_report.reader import reader
+from stock_report.trader import trader
+from stock_report.adapter import adapter
 from strategy.basic_ma import basic_ma_strategy
 from pprint import pprint
 
@@ -24,20 +26,19 @@ def parse_argunments():
 
 def main():
     args = parse_argunments()
-    pprint(args)
     if args['target'] is None:
         raise IOError('target is required')
 
     data_source = reader(args['target'])
+    emulate_trader = trader(args['target'])
+
 
     if args['strategy'] is None:
         stock_crawler = crawler(args['target'])
         stock_crawler.execute(start=args['start'], end=args['end'])
     else:
-        strategy_instance = basic_ma_strategy(data_source)
+        strategy_instance = basic_ma_strategy(reader=data_source, trader=emulate_trader, adapter=adapter())
         strategy_instance.execute()
-
-
 
 if __name__ == '__main__':
     main()

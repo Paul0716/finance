@@ -61,7 +61,6 @@ def get_single_page(*args, **kwargs):
 
 
 def get_stock_list(filename):
-
     stock_id_list = []
     f = open(filename, 'rb')
     for row in csv.reader(f, delimiter=','):
