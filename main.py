@@ -5,6 +5,7 @@ from stock_report.reader import reader
 from stock_report.trader import trader
 from stock_report.adapter import adapter
 from strategy.basic_ma import basic_ma_strategy
+from indicators.simple_moving_average import simple_moving_average
 from pprint import pprint
 
 def parse_argunments():
@@ -30,14 +31,14 @@ def main():
         raise IOError('target is required')
 
     data_source = reader(args['target'])
-    emulate_trader = trader(args['target'])
+    emulate_trader = trader(args['target'], cash=1000000)
 
 
     if args['strategy'] is None:
         stock_crawler = crawler(args['target'])
         stock_crawler.execute(start=args['start'], end=args['end'])
     else:
-        strategy_instance = basic_ma_strategy(reader=data_source, trader=emulate_trader, adapter=adapter())
+        strategy_instance = basic_ma_strategy(reader=data_source, trader=emulate_trader, adapter=adapter(), indicators=[simple_moving_average()])
         strategy_instance.execute()
 
 if __name__ == '__main__':
