@@ -1,9 +1,9 @@
 from googleapiclient.discovery import build
+
 from .utils import authorization
-from pprint import pprint
+
 
 class google_drive:
-
     _root_files = []
 
     def __init__(self, scope, path):
@@ -17,7 +17,6 @@ class google_drive:
 
     def authorization(self, scope, path):
         self.credentials = authorization(scope, path)
-
 
     def build(self):
         return build('drive', 'v3', credentials=self.credentials)

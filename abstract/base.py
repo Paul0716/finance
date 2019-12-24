@@ -1,8 +1,9 @@
-from google_client.sheets import google_sheets
-from google_client.drive import google_drive
 import re
 from os import path
-from pprint import pprint
+
+from google_client.drive import google_drive
+from google_client.sheets import google_sheets
+
 
 class base:
     target_folder = 'Taiwan Index Stock'
@@ -14,11 +15,11 @@ class base:
     sheet_client = google_sheets(scope, path=path.abspath('../client_secret.json'))
     drive_client = google_drive(scope, path=path.abspath('../client_secret.json'))
 
-    def _get_target_sheet(self):
-        return self.drive_client.find_target_sheet(self.stock_number)
+    def _get_target_sheet(self, *args, **kwargs):
+        return self.drive_client.find_target_sheet(kwargs['name'])
 
-    def _get_target_folder(self):
-        return self.drive_client.get_root_folder(self.target_folder)
+    def _get_target_folder(self, *args, **kwargs):
+        return self.drive_client.get_root_folder(kwargs['name'])
 
     def get_grids_rangs(self, *args, **kwargs):
         alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -31,6 +32,7 @@ class base:
 
     def get_daily_data(self, *args, **kwargs):
         def is_daily_tab(item):
-            return True if re.search(r'^Daily!(.+)$',item['range']).group(0) else False
+            return True if re.search(r'^Daily!(.+)$', item['range']).group(0) else False
+
         tab_data = list(filter(is_daily_tab, kwargs['data']['valueRanges']))[0]
         return tab_data['values'] if 'values' in tab_data else None

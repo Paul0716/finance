@@ -1,5 +1,5 @@
-from pprint import pprint
 from functools import reduce
+
 
 class simple_moving_average:
 

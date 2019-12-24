@@ -1,9 +1,10 @@
-from stock_report.abstract import base
-from pprint import pprint
+from abstract.base import base
 
 '''
 twse_daily_transaction_adapater
 '''
+
+
 class adapter(base):
     def __init__(self):
         ''' constructor '''
@@ -18,7 +19,7 @@ class adapter(base):
         if type(row) is list:
             return self._transform_from_list(row)
         else:
-            return self._transform_from_string(row)
+            return self.transform_from_source(row)
 
     def _transform_from_list(self, row, *args, **kwargs):
         '''
@@ -41,7 +42,22 @@ class adapter(base):
             'number_of_transactions': row[8]  # 成交筆數
         }
 
-    def _transform_from_string(self, row, *args, **kwargs):
+    def transform_to_source(self, data, *args, **kwargs):
+        seperator_symbol = kwargs['seperator'] if 'seperator' in kwargs.keys() else ','
+        return seperator_symbol.join([
+            data['date'],
+            data['volume'],
+            data['amount_of_transaction'],
+            data['open'],
+            data['high'],
+            data['low'],
+            data['close'],
+            data['close'],
+            data['spread'],
+            data['number_of_transactions']
+        ])
+
+    def transform_from_source(self, row, *args, **kwargs):
         '''
         transform TWSE daily transaction information from string to dictionary
 
@@ -50,6 +66,7 @@ class adapter(base):
         :param kwargs:
         :return: dict
         '''
+
         def remove_doulbe_quote(string):
             return string.replace('"', '')
 

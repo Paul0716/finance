@@ -1,8 +1,8 @@
-import pickle
 import os.path
-from google_auth_oauthlib.flow import InstalledAppFlow
+import pickle
+
 from google.auth.transport.requests import Request
-from pprint import pprint
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 
 def authorization(scope, path):
@@ -27,7 +27,9 @@ def authorization(scope, path):
             pickle.dump(creds, token)
     return creds
 
+
 def find_sheet_by_name(spreadsheet_properties, sheet_name):
     def is_sheet_name(sheet):
         return sheet['properties']['title'] == sheet_name
+
     return list(filter(is_sheet_name, spreadsheet_properties['sheets']))
