@@ -8,7 +8,7 @@ class basic_ma_strategy:
     data_storage = {}
 
     def __init__(self, *args, **kwargs):
-        self.reader = kwargs['repository'] if kwargs['repository'] else None
+        self.repository = kwargs['repository'] if kwargs['repository'] else None
         self.trader = kwargs['trader'] if kwargs['trader'] else None
         self.indicators = kwargs['indicators'] if kwargs['indicators'] else None
         self.adapter = kwargs['adapter'] if kwargs['adapter'] else None
@@ -54,9 +54,8 @@ class basic_ma_strategy:
         self.data_storage['raw'] = kwargs['data']
 
     def execute(self):
-        rawdata = list(map(self.adapter.transform, self.reader.get_date_list()))
+        rawdata = list(map(self.adapter.transform, self.repository.read()))
         self._save_raw_data(data=rawdata)
-        pprint(rawdata)
         for indicator in self.indicators:
             if type(indicator).__name__ is 'simple_moving_average':
                 # short ma and long ma

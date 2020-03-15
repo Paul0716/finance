@@ -3,3 +3,5 @@ client_secret.json
 token.pickle
 data/*.csv
 *.log
+**/__pycache__/**
+**/.ipynb_checkpoints/**

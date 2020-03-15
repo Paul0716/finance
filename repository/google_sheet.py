@@ -12,7 +12,7 @@ class repository(base):
     def save(self, *args, **kwargs):
         self._batch_update_google_sheet(name=kwargs['name'], data=kwargs['data'])
 
-    def get_date_list(self, *args, **kwargs):
+    def read(self, *args, **kwargs):
         tab_title = 'Daily'
         stock_number = self.stock_number
         folder = self._get_target_folder(name=stock_number)

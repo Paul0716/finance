@@ -29,7 +29,7 @@ class repository(base):
         def sorted_by_date(item):
             return item[0]
 
-        return sorted(self._read_file(name=kwargs['name']), key=sorted_by_date)
+        return sorted(self._read_file(name=self.stock_number), key=sorted_by_date)
 
     def get_date_list(self, *args, **kwargs):
         return self.read(name=self.stock_number)
