@@ -1,4 +1,8 @@
 # !/bin/bash
 
 # start serving jupyter notebook 
-docker run --rm -d -p 10000:8888 -v "$PWD":/home/jovyan/work jupyter/scipy-notebook
+docker_id=(docker run --rm -d -p 10000:8888 \
+    -v "$PWD":/home/jovyan/work \
+    jupyter/scipy-notebook)
+
+echo $docker_id;

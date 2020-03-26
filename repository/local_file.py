@@ -1,15 +1,9 @@
 import csv
 import os
-from pprint import pprint
-
-from abstract.base import base
-
-
-class repository(base):
+class repository:
 
     def __init__(self, stock_number, *args, **kwargs):
         self.stock_number = stock_number
-        super(base, self)
 
     def save(self, *args, **kwargs):
         path = self._get_file_path(name=kwargs['name'])
@@ -46,10 +40,10 @@ class repository(base):
 
     def _get_file_path(self, *args, **kwargs):
         name = kwargs['name']
-        return f'data/{name}.csv'
+        root = os.path.abspath(os.path.join('..'))
+        return f'{root}/data/{name}.csv'
 
-    def _check_if_file_exists(*args, **kwargs):
+    def _check_if_file_exists(self, *args, **kwargs):
         filename = kwargs['filename']
         if not os.path.isfile(filename):
             open(filename, 'a').close()
-            pprint(f'create file {filename}')

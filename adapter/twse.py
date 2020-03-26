@@ -1,11 +1,9 @@
-from abstract.base import base
-
 '''
 twse_daily_transaction_adapater
 '''
 
 
-class adapter(base):
+class adapter:
     def __init__(self):
         ''' constructor '''
 
